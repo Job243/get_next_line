@@ -6,7 +6,7 @@
 /*   By: jmafueni <jmafueni@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/31 13:09:11 by jmafueni          #+#    #+#             */
-/*   Updated: 2024/10/28 20:08:45 by jmafueni         ###   ########.fr       */
+/*   Updated: 2024/03/05 16:35:27 by jmafueni         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,20 +17,23 @@ char	*get_next_line(int fd)
 	static t_list	*stash = NULL;
 	char			*line;
 
-	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, 0, 0) < 0)
+	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
 	line = NULL;
-	read_to_stash(&stash, fd);
+	if (read_to_stash(&stash, fd) != SUCCESS)
+	{
+		stash = NULL;
+		return (NULL);
+	}
 	if (!stash)
 		return (NULL);
-	if (extract_line(stash, &line) == ERR_MALLOC)
-		return (NULL);
+	extract_line(stash, &line);
 	clean_stash(&stash);
-	if (line[0] == '\0')
+	if (!line || line[0] == '\0')
 	{
+		free(line);
 		free_stash(&stash);
 		stash = NULL;
-		free(line);
 		return (NULL);
 	}
 	return (line);
@@ -46,13 +49,17 @@ int	read_to_stash(t_list **stash, int fd)
 	{
 		buf = (char *)malloc(sizeof(char) * (BUFFER_SIZE + 1));
 		if (!buf)
-			return (SUCCESS);
-		bytes_read = (int)read(fd, buf, BUFFER_SIZE);
-		if ((*stash == NULL && bytes_read == 0) || bytes_read == -1)
+			return (free_stash(stash), ERR_MALLOC);
+		bytes_read = read(fd, buf, BUFFER_SIZE);
+		if (bytes_read == -1)
 		{
 			free(buf);
-			return (SUCCESS);
+			free_stash(stash);
+			*stash = NULL;
+			return (ERR_READ);
 		}
+		if (bytes_read == 0)
+			return (free(buf), SUCCESS);
 		buf[bytes_read] = '\0';
 		if (add_to_stash(stash, buf, bytes_read) == ERR_MALLOC)
 			return (ERR_MALLOC);
@@ -88,15 +95,16 @@ int	add_to_stash(t_list **stash, char *buf, int bytes_read)
 	return (SUCCESS);
 }
 
-int	extract_line(t_list *stash, char **line)
+void	extract_line(t_list *stash, char **line)
 {
 	int	i;
 	int	j;
 
 	if (!stash)
-		return (ERR_MALLOC);
-	if (generate_line(stash, line) == ERR_MALLOC)
-		return (ERR_MALLOC);
+		return ;
+	generate_line(stash, &(*line));
+	if (!line)
+		return ;
 	j = 0;
 	while (stash)
 	{
@@ -113,7 +121,6 @@ int	extract_line(t_list *stash, char **line)
 		stash = stash->next;
 	}
 	(*line)[j] = '\0';
-	return (SUCCESS);
 }
 
 void	clean_stash(t_list **stash)
@@ -125,7 +132,7 @@ void	clean_stash(t_list **stash)
 
 	clean_node = (t_list *)malloc(sizeof(t_list));
 	if (!stash || !clean_node)
-		return ;
+		return (free_stash(stash));
 	clean_node->next = NULL;
 	last = ft_lstlast(*stash);
 	i = 0;
@@ -136,7 +143,7 @@ void	clean_stash(t_list **stash)
 	clean_node->content = (char *)malloc(sizeof(char)
 			* ((ft_strlen(last->content) - i) + 1));
 	if (!clean_node->content)
-		return ;
+		return (free_stash(&clean_node));
 	j = 0;
 	while (last->content[i])
 		clean_node->content[j++] = last->content[i++];

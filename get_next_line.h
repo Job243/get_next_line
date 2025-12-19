@@ -6,7 +6,7 @@
 /*   By: jmafueni <jmafueni@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/22 16:35:58 by jmafueni          #+#    #+#             */
-/*   Updated: 2024/04/05 14:33:32 by jmafueni         ###   ########.fr       */
+/*   Updated: 2024/03/05 16:35:40 by jmafueni         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@
 # include <stdio.h>
 # include <string.h>
 # define  ERR_MALLOC -3
+# define ERR_READ	-2
 # define SUCCESS 100
 
 typedef struct s_list
@@ -37,10 +38,10 @@ char	*get_next_line(int fd);
 int		ft_found_newline(t_list *stash);
 int		ft_strlen(char *str);
 int		add_to_stash(t_list **stash, char *buf, int bytes_read);
-int		extract_line(t_list *stash, char **line);
-int		generate_line(t_list *stash, char **line);
 int		read_to_stash(t_list **stash, int fd);
 void	clean_stash(t_list **stash);
+void	extract_line(t_list *stash, char **line);
 void	free_stash(t_list **stash);
+void	generate_line(t_list *stash, char **line);
 
 #endif

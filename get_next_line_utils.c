@@ -24,9 +24,7 @@ int	ft_found_newline(t_list *stash)
 	while (current->content[i])
 	{
 		if (current->content[i] == '\n')
-		{
 			return (1);
-		}
 		i++;
 	}
 	return (0);
@@ -44,7 +42,7 @@ t_list	*ft_lstlast(t_list *stash)
 	return (current);
 }
 
-int	generate_line(t_list *stash, char **line)
+void	generate_line(t_list *stash, char **line)
 {
 	int	i;
 	int	len;
@@ -67,8 +65,7 @@ int	generate_line(t_list *stash, char **line)
 	}
 	*line = (char *)malloc(sizeof(char) * (len + 1));
 	if (!*line)
-		return (ERR_MALLOC);
-	return (SUCCESS);
+		return ;
 }
 
 int	ft_strlen(char *str)
